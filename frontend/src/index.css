@@ -1,0 +1,19 @@
+@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Colors */
+:root {
+  --primary1: #333333; /* Dark Gray */
+  --primary2: #FFD700; /* Bright Yellow */
+}
+
+/* Using the colors in Tailwind classes */
+.bg-primary1 {
+  background-color: var(--primary1);
+}
+
+.text-primary2 {
+  color: var(--primary2);
+}
