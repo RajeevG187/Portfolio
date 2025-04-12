@@ -1,13 +1,16 @@
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_community.chat_models import ChatOllama
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.vectorstores import FAISS
 from langchain_core.runnables import Runnable
 import os
+from dotenv import load_dotenv 
+
 from utils.loader import load_split_documents
 from utils.embeddings import get_embedding_model
 
+load_dotenv()
 VECTORSTORE_PATH = "vectorstore_index"
 
 def make_vectorstore():
@@ -28,7 +31,13 @@ def get_chain() -> Runnable:
         db = make_vectorstore()    
 
     retriever = db.as_retriever(search_kwargs={"k": 3})
-    llm = ChatOllama(model="mistral", temperature=0.2)
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-2.0-flash-lite",
+        temperature=0.2,
+        google_api_key=os.getenv("GOOGLE_API_KEY")
+    )
+
+    # print(llm.invoke("What is the color of the sky?"))
 
     prompt = ChatPromptTemplate.from_template("""
 Answer the following question based on the provided context. Dont mention about the courses untill specifically asked. 
@@ -44,3 +53,6 @@ Question : {input}""")
     except:
         pass  # Skip if pre-warm fails
     return chain
+
+# if __name__ == "__main__": 
+#      get_chain()

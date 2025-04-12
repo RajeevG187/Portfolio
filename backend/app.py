@@ -24,6 +24,7 @@ async def ping():
 async def chat_stream(question: str):
     async def event_generator():
         async for chunk in rag_chain.astream({"input": question}):
+            print(chunk)
             if "answer" in chunk:
                 yield f"data: {chunk['answer']}\n\n"
 
