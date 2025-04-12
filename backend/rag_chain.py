@@ -5,7 +5,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.vectorstores import FAISS
 from langchain_core.runnables import Runnable
 import os
-from dotenv import load_dotenv 
+from dotenv import load_dotenv
 
 from utils.loader import load_split_documents
 from utils.embeddings import get_embedding_model
@@ -25,34 +25,35 @@ def load_local():
     return FAISS.load_local(VECTORSTORE_PATH, embeddings, allow_dangerous_deserialization=True)
 
 def get_chain() -> Runnable:
-    if os.path.exists(VECTORSTORE_PATH):
-        db = load_local()
-    else:
-        db = make_vectorstore()    
+    # Load or build the vectorstore
+    db = load_local() if os.path.exists(VECTORSTORE_PATH) else make_vectorstore()
+    retriever = db.as_retriever()
 
-    retriever = db.as_retriever(search_kwargs={"k": 3})
+    # Load the LLM
     llm = ChatGoogleGenerativeAI(
-        model="gemini-2.0-flash-lite",
-        temperature=0.2,
-        google_api_key=os.getenv("GOOGLE_API_KEY")
+        model="gemini-2.0-flash-001",
+        google_api_key=os.getenv("GOOGLE_API_KEY"),
+        streaming=True  # make sure this is enabled for .stream() support
     )
 
-    # print(llm.invoke("What is the color of the sky?"))
+    # Prompt Template
+    prompt = ChatPromptTemplate.from_template(
+        "Answer the following question based on the provided context.\n"
+        "Avoid mentioning course details unless specifically asked.\n\n"
+        "Dont repeat the same text again and again."
+        "<context>\n{context}\n</context>\n\n"
+        "Question: {input}"
+    )
 
-    prompt = ChatPromptTemplate.from_template("""
-Answer the following question based on the provided context. Dont mention about the courses untill specifically asked. 
-<context> {context} <context>.
-Question : {input}""")
-
+    # Combine documents + retrieval
     combine_docs_chain = create_stuff_documents_chain(llm, prompt)
-
     chain = create_retrieval_chain(retriever, combine_docs_chain)
+
+    # Optional: prewarm to reduce cold-start delay
     try:
         for _ in chain.stream({"input": "Hello"}):
             break
-    except:
-        pass  # Skip if pre-warm fails
-    return chain
+    except Exception as e:
+        print("Prewarm failed:", e)
 
-# if __name__ == "__main__": 
-#      get_chain()
+    return chain

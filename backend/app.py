@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.responses import StreamingResponse
 from fastapi.responses import StreamingResponse
 from rag_chain import get_chain
 
@@ -8,7 +7,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://portfolio-lo2x.vercel.app/"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -24,7 +23,6 @@ async def ping():
 async def chat_stream(question: str):
     async def event_generator():
         async for chunk in rag_chain.astream({"input": question}):
-            print(chunk)
             if "answer" in chunk:
                 yield f"data: {chunk['answer']}\n\n"
 
@@ -34,5 +32,6 @@ async def chat_stream(question: str):
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # Prevent buffering (important on Render/Nginx)
         }
     )

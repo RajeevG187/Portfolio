@@ -4,15 +4,15 @@ import github from '../assets/images/github.png';
 import linked_in from '../assets/images/linked_in.png';
 import leetcodes from '../assets/images/leetcodes.png';
 import { motion } from 'framer-motion';
-import { useEffect, useState } from "react";
+// import { useEffect, useState } from "react";
 import { Typewriter } from "react-simple-typewriter";
 
 const Home = () => {
-  const [showTyped, setShowTyped] = useState(false);
+  // const [showTyped, setShowTyped] = useState(false);
 
-  useEffect(() => {
-    setShowTyped(true);
-  }, []);
+  // useEffect(() => {
+  //   setShowTyped(true);
+  // }, []);
 
   return (
     <div className="bg-[#151925] text-white">

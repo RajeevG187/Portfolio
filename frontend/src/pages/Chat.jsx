@@ -12,15 +12,14 @@ const Chat = () => {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isLoading) return; // Prevent double send or empty messages
 
-    const userMessage = { sender: "user", text: input };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
     setIsLoading(true);
 
+    const userMessage = { sender: "user", text: input };
     const botMessage = { sender: "bot", text: "" };
-    setMessages((prev) => [...prev, botMessage]);
+    setMessages((prev) => [...prev, userMessage, botMessage]);
+    setInput("");
 
     const eventSource = new EventSource(
       `${process.env.REACT_APP_BACKEND_URL}/api/chat/stream?question=${encodeURIComponent(input)}`
@@ -29,7 +28,6 @@ const Chat = () => {
     eventSource.onmessage = (event) => {
       const data = event.data;
 
-      // Update the last bot message with streaming content
       setMessages((prev) => {
         const updated = [...prev];
         const lastIndex = updated.length - 1;
