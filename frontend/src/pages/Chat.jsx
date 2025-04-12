@@ -23,7 +23,7 @@ const Chat = () => {
     setMessages((prev) => [...prev, botMessage]);
 
     const eventSource = new EventSource(
-      `http://localhost:3001/api/chat/stream?question=${encodeURIComponent(input)}`
+      `${process.env.REACT_APP_BACKEND_URL}/api/chat/stream?question=${encodeURIComponent(input)}`
     );
 
     eventSource.onmessage = (event) => {
