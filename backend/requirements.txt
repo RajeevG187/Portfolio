@@ -9,3 +9,4 @@ sentence-transformers
 PyPDF2
 faiss-cpu
 python-dotenv
+langchain_google_genai
