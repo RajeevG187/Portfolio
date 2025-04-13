@@ -39,8 +39,7 @@ def get_chain() -> Runnable:
     # Prompt Template
     prompt = ChatPromptTemplate.from_template(
         "Answer the following question based on the provided context.\n"
-        "Avoid mentioning course details unless specifically asked.\n\n"
-        "Dont repeat the same text again and again."
+        "In the given context consider I as Rajeev Goel..\n"
         "<context>\n{context}\n</context>\n\n"
         "Question: {input}"
     )
