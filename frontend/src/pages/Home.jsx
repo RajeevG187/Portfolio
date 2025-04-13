@@ -5,6 +5,7 @@ import ProjectsSection from '../components/ProjectsSection';
 import ContactSection from '../components/ContactSection';
 import HeroSection from '../components/HeroSection';
 import Acheivements from '../components/Acheivements';
+import ScrollSpySidebar from '../components/ScrollSpy';
 
 const Home = () => {
   return (

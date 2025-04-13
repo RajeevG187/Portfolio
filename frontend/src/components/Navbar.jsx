@@ -34,8 +34,9 @@ const Navbar = () => {
         <ul className="md:hidden bg-gray-800 text-white space-y-4 p-4">
           <li><a href="/" smooth={true} duration={500} className="block cursor-pointer" onClick={() => setMenuOpen(false)}>Home</a></li>
           <li><ScrollLink to="about" smooth={true} duration={500} className="block cursor-pointer" onClick={() => setMenuOpen(false)}>About</ScrollLink></li>
+          <li><ScrollLink to="experience" smooth={true} duration={500} className="block cursor-pointer" onClick={() => setMenuOpen(false)}>Experience</ScrollLink></li>
           <li><ScrollLink to="projects" smooth={true} duration={500} className="block cursor-pointer" onClick={() => setMenuOpen(false)}>Projects</ScrollLink></li>
-          <li><ScrollLink to="contact" smooth={true} duration={500} className="block cursor-pointer" onClick={() => setMenuOpen(false)}>Contact</ScrollLink></li>
+          <li><ScrollLink to="extra" smooth={true} duration={500} className="block cursor-pointer" onClick={() => setMenuOpen(false)}>Extras</ScrollLink></li>
           <li><a href="/chat" className="block cursor-pointer  text-emerald-500" onClick={() => setMenuOpen(false)}>Chat</a></li>
         </ul>
       )}
