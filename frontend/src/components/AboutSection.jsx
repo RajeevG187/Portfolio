@@ -43,7 +43,7 @@ const AboutSection = () => {
                             className="vertical-timeline-element--education"
                             contentStyle={{ background: '#209f7d', color: '#fff' }}
                             contentArrowStyle={{ borderRight: '7px solid #209f7d' }}
-                            date="2022 - 2026"
+                            date="2020 - 2022"
                             iconStyle={{ background: '#1DCD9F', color: '#fff' }}
                             icon={<FaGraduationCap />}
                         >
@@ -55,7 +55,7 @@ const AboutSection = () => {
                             className="vertical-timeline-element--education"
                             contentStyle={{ background: '#209f7d', color: '#fff' }}
                             contentArrowStyle={{ borderRight: '7px solid #209f7d' }}
-                            date="2022 - 2026"
+                            date="2018 - 2020"
                             iconStyle={{ background: '#1DCD9F', color: '#fff' }}
                             icon={<FaGraduationCap />}
                         >
