@@ -102,7 +102,7 @@ const Acheivements = () => {
                         <div className="bg-[#1E1E2F] p-6 rounded-lg shadow-md flex flex-col items-center">
                             <img src={leetcode} alt="Leetcode" className="w-32 h-32 object-cover mb-4 rounded-full" />
                             <h4 className="text-xl font-semibold text-[#1DCD9F] mb-2">Leetcode</h4>
-                            <p className="text-white text-center">Solved 260+ problems across all categories. <a href="https://leetcode.com/u/rajeevgoel187/" target="_blank" rel="noopener noreferrer" className="underline text-[#1DCD9F]">[My Profile]</a></p>
+                            <p className="text-white text-center">Solved 280+ problems across all categories. <a href="https://leetcode.com/u/rajeevgoel187/" target="_blank" rel="noopener noreferrer" className="underline text-[#1DCD9F]">[My Profile]</a></p>
                         </div>
 
                         {/* Achievement 3 */}
