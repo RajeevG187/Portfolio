@@ -70,3 +70,4 @@ const AboutSection = () => {
 }
 
 export default AboutSection
+>>>>>>> 2e38bc7 (Update AboutSection.jsx)

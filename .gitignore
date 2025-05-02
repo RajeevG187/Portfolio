@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+dist/
+build/
+node_modules/
+.env
+.env.*
+*.sqlite3
+*.log
+
+# Virtual environments
+venv/
+env/
+.venv/
+.envrc
+
+# VSCode
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Astra Secure Connect Bundle
+secure-connect-*/  # Important: ignore secure bundle directories
+*.zip               # If your SCB is zipped
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# Cache
+.cache/
+*.cache
+
+# Pytest
+.pytest_cache/
+
+# FastAPI static builds (if any)
+static/
