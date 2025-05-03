@@ -8,3 +8,4 @@ python-dotenv
 langchain_google_genai
 cassandra-driver
 tiktoken
+cassio
