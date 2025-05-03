@@ -4,14 +4,22 @@ from cassandra.auth import PlainTextAuthProvider
 from langchain_community.vectorstores import Cassandra
 from langchain.indexes.vectorstore import VectorStoreIndexWrapper
 from utils.embeddings import get_embedding_model
-import os
+import os, base64
 from dotenv import load_dotenv
+
 load_dotenv()
 
+
 def get_cassandra_session():
+    scb_base64 = os.environ["ASTRA_SCB_BASE64"]
+    scb_path = "/tmp/secure-connect-dbtest.zip"
+
+    with open(scb_path, "wb") as f:
+        f.write(base64.b64decode(scb_base64))
+
     if not hasattr(get_cassandra_session, "session"):
         cloud_config = {
-            'secure_connect_bundle': '../backend/secure-connect-dbtest.zip',
+            'secure_connect_bundle': scb_path,
             'connect_timeout': 30
         }
         auth_provider = PlainTextAuthProvider("token", os.getenv("DATABASE_TOKEN"))

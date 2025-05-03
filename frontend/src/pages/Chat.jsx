@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 
 const Chat = () => {
-  const [messages, setMessages] = useState([]); // { sender: 'user' | 'bot', text: string }
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Auto scroll to bottom when new message arrives
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
