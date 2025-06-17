@@ -12,11 +12,11 @@ const Acheivements = () => {
     const [showAll, setShowAll] = useState(false);
 
     const skills = {
-        Languages: ["Python", "C/C++", "JavaScript (MERN)", "LaTeX"],
-        "ML & DL": ["PyTorch", "TensorFlow/Keras", "Scikit-learn", "Transformers", "LangChain", "GANS", "LLMs", "RAG"],
+        Languages: ["Python", "C/C++", "JavaScript (MERN)", "LaTeX", "SQL"],
+        "ML & DL": ["PyTorch", "TensorFlow/Keras", "Scikit-learn", "Transformers", "LangChain", "LangGraph","GANS", "LLMs", "RAG"],
         "Web Development": ["React", "Node.js", "Express", "MongoDB", "FastAPI"],
         "Tools & Platforms": ["Git/GitHub", "Docker","PowerBI",  "Google Colab", "Linux", "VS Code", "LangSmith"],
-        "Coursework": ["Data Structures", "Algorithms", "AI", "ML", "NLP"],
+        "Coursework": ["Data Structures", "Algorithms", "AI", "ML", "NLP", "Computer Networks", "Information Security", "Big Data", "Network Science"],
         "Soft Skills": ["Leadership", "Communication", "Analytical Thinking", "Time Management", "Teamwork"]
     };
 

@@ -60,7 +60,7 @@ const HeroSection = () => {
                         onClick={() => window.location.href = "/chat"}
                         className="cursor-pointer border-2 border-white text-white px-6 py-2 rounded-xl font-semibold hover:bg-[#1DCD9F] transition-colors duration-300"
                     >
-                        Chat
+                        Chat with my Chatbot
                     </button>
                 </div>
             </div>
