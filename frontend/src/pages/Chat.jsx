@@ -152,7 +152,7 @@ const Chat = () => {
           <div className="flex items-center gap-3">
             <input
               type="text"
-              className="flex-1 bg-[#2a3441] text-white border border-[#3a4651] rounded-xl px-4 py-3 focus:outline-none focus:border-[#1DCD9F] focus:ring-2 focus:ring-[#1DCD9F]/20 transition-all placeholder-gray-400"
+              className="flex-1 bg-[#2a3441] text-white border border-[#3a4651] rounded-xl px-4 py-3 focus:outline-none focus:border-[#1DCD9F] focus:ring-2 focus:ring-[#1DCD9F]/20 transition-all placeholder-gray-500"
               placeholder="Type your message here..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
