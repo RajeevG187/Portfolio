@@ -9,8 +9,6 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -18,156 +16,170 @@ const Chat = () => {
   }, [messages]);
 
   const handleSend = async () => {
-    if ((!input.trim() && !image) || isLoading) return;
+    if (!input.trim() || isLoading) return;
     setIsLoading(true);
 
-    let userMessage = { sender: "user", text: input, image: imagePreview };
+    let userMessage = { sender: "user", text: input };
     let botMessage = { sender: "bot", text: "" };
     setMessages((prev) => [...prev, userMessage, botMessage]);
     setInput("");
-    setImage(null);
-    setImagePreview(null);
 
-    let response;
-    if (image) {
-      // Send image with FormData
-      const formData = new FormData();
-      formData.append("image", image);
-      formData.append("question", input);
-      response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/api/chat/upload-image`,
-        {
-          method: "POST",
-          credentials: "include",
-          body: formData
-        }
-      );
-    } else {
+    try {
       // Use fetch with credentials for SSE
-      response = await fetch(
+      const response = await fetch(
         `${process.env.REACT_APP_BACKEND_URL}/api/chat/stream?question=${encodeURIComponent(input)}`,
         {
           method: 'GET',
           credentials: 'include'
         }
       );
-    }
 
-    if (image) {
-      // Assume backend returns JSON with bot reply
-      const data = await response.json();
-      setMessages((prev) => {
-        const updated = [...prev];
-        updated[updated.length - 1] = { ...updated[updated.length - 1], text: data.reply };
-        return updated;
-      });
-      setIsLoading(false);
-      return;
-    }
-
-    // SSE streaming for text
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n\n');
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.substring(6);
-          setMessages((prev) => {
-            const updated = [...prev];
-            const lastIndex = updated.length - 1;
-            updated[lastIndex].text += data;
-            return updated;
-          });
+      // SSE streaming for text
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.substring(6);
+            setMessages((prev) => {
+              const updated = [...prev];
+              const lastIndex = updated.length - 1;
+              updated[lastIndex].text += data;
+              return updated;
+            });
+          }
         }
       }
+    } catch (error) {
+      console.error('Error:', error);
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = { 
+          ...updated[updated.length - 1], 
+          text: "Sorry, there was an error processing your request." 
+        };
+        return updated;
+      });
     }
+    
     setIsLoading(false);
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImage(file);
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-[#151925] text-white flex flex-col items-center px-4 mt-15 pt-20">
-      <h1 className="text-3xl font-bold text-[#1DCD9F] mb-4">Ask Me Anything 🤖</h1>
-      <div className="w-full max-w-3xl flex flex-col border border-[#1DCD9F] rounded-xl p-4 h-[70vh] overflow-y-auto bg-[#222222] shadow-lg">
-        {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`my-2 flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
-          >
-            {msg.sender === "bot" && (
-              <img src={AVATARS.bot} alt="Bot" className="w-8 h-8 rounded-full mr-2 self-end shadow" />
-            )}
+    <div className="min-h-screen bg-[#151925] text-white flex flex-col items-center px-4 py-28">
+      {/* Header */}
+      <div className="w-full max-w-4xl mb-6">
+        <h1 className="text-4xl font-bold text-center text-[#1DCD9F] mb-2">
+          Ask Me Anything 🤖
+        </h1>
+        <p className="text-center text-gray-400 text-lg">
+          Chat with AI and get instant responses
+        </p>
+      </div>
+
+      {/* Chat Container */}
+      <div className="w-full max-w-4xl flex flex-col bg-[#1a1f2e] rounded-2xl shadow-2xl border border-[#2a3441] overflow-hidden">
+        {/* Messages Area */}
+        <div className="flex-1 h-[600px] overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-[#1a1f2e] to-[#151925]">
+          {messages.length === 0 && (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center text-gray-400">
+                <div className="text-6xl mb-4">💬</div>
+                <p className="text-xl">Start a conversation!</p>
+                <p className="text-sm mt-2">Ask me anything and I'll help you out.</p>
+              </div>
+            </div>
+          )}
+          
+          {messages.map((msg, idx) => (
             <div
-              className={`max-w-[70%] px-4 py-2 rounded-2xl shadow-md flex flex-col gap-2 ${
-                msg.sender === "user"
-                  ? "bg-gradient-to-br from-[#1DCD9F] to-[#16a178] text-black rounded-br-none"
-                  : "bg-gradient-to-br from-[#333] to-[#444] text-white rounded-bl-none"
+              key={idx}
+              className={`flex items-start gap-3 ${
+                msg.sender === "user" ? "flex-row-reverse" : "flex-row"
               }`}
             >
-              {msg.image && (
-                <img
-                  src={msg.image}
-                  alt="sent"
-                  className="max-w-[200px] max-h-[200px] rounded-lg border border-[#1DCD9F] mb-1"
-                  style={{ objectFit: "cover" }}
+              {/* Avatar */}
+              <img
+                src={msg.sender === "user" ? AVATARS.user : AVATARS.bot}
+                alt={msg.sender}
+                className="w-10 h-10 rounded-full shadow-lg border-2 border-[#1DCD9F] flex-shrink-0"
+              />
+              
+              {/* Message Content */}
+              <div
+                className={`max-w-[75%] px-5 py-3 rounded-2xl shadow-lg relative ${
+                  msg.sender === "user"
+                    ? "bg-gradient-to-br from-[#1DCD9F] to-[#16a178] text-black font-medium"
+                    : "bg-gradient-to-br from-[#2a3441] to-[#1e2936] text-white border border-[#3a4651]"
+                }`}
+              >
+                {/* Message tail */}
+                <div
+                  className={`absolute top-3 w-0 h-0 ${
+                    msg.sender === "user"
+                      ? "right-[-8px] border-l-[8px] border-l-[#1DCD9F] border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent"
+                      : "left-[-8px] border-r-[8px] border-r-[#2a3441] border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent"
+                  }`}
                 />
-              )}
-              <span>{msg.text}</span>
+                
+                <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                  {msg.text || (msg.sender === "bot" && isLoading && idx === messages.length - 1 ? (
+                    <div className="flex items-center gap-2">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-[#1DCD9F] rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-[#1DCD9F] rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                        <div className="w-2 h-2 bg-[#1DCD9F] rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                      </div>
+                      <span className="text-gray-400">Thinking...</span>
+                    </div>
+                  ) : msg.text)}
+                </div>
+              </div>
             </div>
-            {msg.sender === "user" && (
-              <img src={AVATARS.user} alt="User" className="w-8 h-8 rounded-full ml-2 self-end shadow" />
-            )}
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input Area */}
+        <div className="p-6 bg-[#1e2936] border-t border-[#2a3441]">
+          <div className="flex items-center gap-3">
+            <input
+              type="text"
+              className="flex-1 bg-[#2a3441] text-white border border-[#3a4651] rounded-xl px-4 py-3 focus:outline-none focus:border-[#1DCD9F] focus:ring-2 focus:ring-[#1DCD9F]/20 transition-all placeholder-gray-400"
+              placeholder="Type your message here..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              disabled={isLoading}
+            />
+            <button
+              onClick={handleSend}
+              disabled={isLoading || !input.trim()}
+              className="bg-gradient-to-r from-[#1DCD9F] to-[#16a178] text-black font-semibold px-6 py-3 rounded-xl hover:from-[#16a178] hover:to-[#138f64] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+            >
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                  <span>Sending</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                  </svg>
+                  <span>Send</span>
+                </div>
+              )}
+            </button>
           </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-      {/* Input */}
-      <div className="w-full max-w-3xl mt-4 flex items-center space-x-2">
-        {/* <label className="cursor-pointer flex items-center">
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleImageChange}
-            disabled={isLoading}
-          />
-          <span className="bg-[#1DCD9F] hover:bg-[#16a178] text-black px-3 py-2 rounded-lg font-semibold transition flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-1">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5V19a2 2 0 002 2h14a2 2 0 002-2v-2.5M16.5 12.5L12 17m0 0l-4.5-4.5M12 17V3" />
-            </svg>
-            Image
-          </span>
-        </label>
-        {imagePreview && (
-          <img src={imagePreview} alt="preview" className="w-10 h-10 rounded-lg border border-[#1DCD9F] object-cover" />
-        )} */}
-        <input
-          type="text"
-          className="flex-1 bg-[#333] text-white border border-[#444] rounded-lg px-4 py-2 focus:outline-none focus:border-[#1DCD9F]"
-          placeholder="Type your question..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          disabled={isLoading}
-        />
-        <button
-          onClick={handleSend}
-          disabled={isLoading}
-          className="bg-[#1DCD9F] text-black font-semibold px-4 py-2 rounded-lg hover:bg-[#16a178] transition"
-        >
-          {isLoading ? "..." : "Send"}
-        </button>
+        </div>
       </div>
     </div>
   );
