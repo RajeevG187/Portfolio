@@ -73,7 +73,7 @@ const Chat = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#151925] text-white flex flex-col items-center px-4 py-8">
+    <div className="min-h-screen bg-[#151925] text-white flex flex-col items-center px-4 py-28">
       {/* Header */}
       <div className="w-full max-w-4xl mb-6">
         <h1 className="text-4xl font-bold text-center text-[#1DCD9F] mb-2">
