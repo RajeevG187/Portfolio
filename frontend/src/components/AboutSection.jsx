@@ -16,10 +16,11 @@ const AboutSection = () => {
                 <div>
                     <h3 className="text-3xl font-semibold text-[#1DCD9F] mb-4">Professional Summary</h3>
                     <p>
-                        I am a highly motivated and enthusiastic data science and AI practitioner, with a deep interest in solving real-world problems using cutting-edge technology. I am currently pursuing a B.Tech in Data Science & Artificial Intelligence at IIT Bhilai, with a CGPA of 9.12.
-                        In my current role as a <strong>Data Analyst Intern at NoQs Digital</strong>, I have honed my analytical and problem-solving skills, leveraging data to provide actionable insights that help drive business decisions.
-                        Additionally, my participation in the <strong>Chanakya Fellowship</strong> has further enhanced my skills in leadership and critical thinking.
-                        I am proficient in Python, C++, TypeScript, and JavaScript (MERN), with experience in popular frameworks such as <strong>PyTorch</strong>, <strong>TensorFlow</strong>, <strong>LangChain</strong>, and more.
+                        I am a highly motivated and enthusiastic data science and AI practitioner, with a deep interest in solving real-world problems using cutting-edge technology. I am currently pursuing a B.Tech in Data Science & Artificial Intelligence at IIT Bhilai, with a CGPA of 9.24.
+                        In my current role as a <strong>Gen AI Intern</strong> at <strong>Assurant</strong>, which is MNC famous for its insurance and risk management services, I have been working on developing AI-driven solutions including chatbots and report generators, for automation of report-making processes and enhancing customer support systems. 
+                        I have also been selected for C4GT for making contribution to issue in AI-Assisted-Mental-Health-Screening by RCTS-IIITH.
+                        Additionally, my participation in the <strong>Chanakya Fellowship</strong> has further enhanced my skills PyTorch and my knowledge in the field of Deep Learning Hybrid Models.
+                        I have recieved A grade in: Algorithms, Data Analytics and Viz., Big Data, Artificial Intelligence, Machine Learning, Computer Networks(TCP/IP), Information Security, Natural Language Processing, Network Science.
                     </p>
                 </div>
 
@@ -36,7 +37,7 @@ const AboutSection = () => {
                             icon={<FaGraduationCap />}
                         >
                             <h4 className="vertical-timeline-element-title font-bold">IIT Bhilai</h4>
-                            <p>B.Tech in Data Science & Artificial Intelligence (CGPA: 9.12)</p>
+                            <p>B.Tech in Data Science & Artificial Intelligence (CGPA: 9.24)</p>
                         </VerticalTimelineElement>
 
                         <VerticalTimelineElement
