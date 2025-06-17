@@ -10,7 +10,7 @@ const ProjectsSection = () => {
                         title: "Here For You",
                         desc: "A private AI assistant for mental health support specialized on ICD-11 Manual. along with an appointment booking system with mental health specialists.",
                         link: "https://here-for-you-frontend.vercel.app/",
-                        pdf: "../assets/files/HereForYou.pdf",
+                        pdf: "https://drive.google.com/file/d/1bGqOve3021emd7zvUADnlp2GpcxQ6TIc/view?usp=sharing",
                         github: ""
                     },
                     {
