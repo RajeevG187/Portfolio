@@ -1,107 +1,138 @@
 from fastapi import FastAPI, Request, Response
-import uuid
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 import time
-from langchain.memory import ConversationSummaryMemory
 from langchain_google_genai import ChatGoogleGenerativeAI
 import os
+import logging
 from dotenv import load_dotenv
-
-load_dotenv()
-
-session_memories = {}
-MEMORY_TTL = 1800 # 30 minutes 
-llm = llm = ChatGoogleGenerativeAI(
-        model="gemini-2.0-flash-001",
-        google_api_key=os.getenv("GOOGLE_API_KEY"),
-        streaming=True
-    )
-
+from pydantic import BaseModel
+import datetime
 from rag_chain import get_chain
 from utils.db import get_vectorindex
 
-app = FastAPI()
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-@app.middleware("http")
-async def add_session_id(request: Request, call_next):
-    session_id = request.cookies.get("session_id")
-    if not session_id:
-        session_id = str(uuid.uuid4())
-    request.state.session_id = session_id  # for downstream access
-    response: Response = await call_next(request)
-    response.set_cookie(
-        key="session_id",
-        value=session_id,
-        httponly=True,
-        # Change these settings:
-        samesite="none",    
-        secure=False,
-        max_age=1800  # 30 minutes to match your MEMORY_TTL
-    )
-    print(f"Session ID: {session_id}")
-    return response
-    
+load_dotenv()
+app = FastAPI()
+session_memory = {}
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.getenv("FRONTEND_URL")],
+    allow_origins=['https://portfolio-lo2x.vercel.app/', 'http://localhost:3000'],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+llm = ChatGoogleGenerativeAI(
+        model="gemini-2.0-flash-001",
+        google_api_key=os.getenv("GOOGLE_API_KEY"),
+        streaming=True
+    )
+
+class ChatRequest(BaseModel):
+    session_id: str
+    question: str
+
+class PingRequest(BaseModel):
+    session_id: str
+
+def extract_text_from_chunk(chunk):
+    """Extract text from chunk based on model-specific formats"""
+    try:
+        if chunk is None:
+            return ""
+        
+        # Handle different chunk formats
+        if isinstance(chunk, dict):
+            # Try different possible keys
+            for key in ["text", "answer", "content", "output", "generated_text"]:
+                if key in chunk and chunk[key]:
+                    return str(chunk[key])
+            # If no specific key found, return string representation
+            return str(chunk)
+        elif isinstance(chunk, str):
+            return chunk
+        else:
+            return str(chunk)
+    except Exception as e:
+        logger.error(f"Error extracting text from chunk: {e}")
+        return ""
+
 vector_index = None
 rag_chain = None
 
 @app.on_event("startup")
-def load_resources():
+async def startup_event():
     global vector_index, rag_chain
-    vector_index = get_vectorindex()
+    try:
+        logger.info("Starting up the application...")
+        # Initialize vector index and RAG chain
+        vector_index = get_vectorindex()
+        # rag_chain = get_chain(vector_index, llm)
+        logger.info("Application started successfully.")
+    except Exception as e:
+        logger.error(f"Error during startup: {e}")
 
-@app.get("/api/ping")
-async def ping():
+@app.post("/api/ping")
+async def ping(request: PingRequest):
+    global session_memory
+    session_memory[request.session_id] = []
     return {"status": "ok"}
 
-@app.get("/api/debug/session")
-async def debug_session(request: Request):
-    return {
-        "session_id": request.state.session_id,
-        "cookies_received": request.cookies
-    }
 
-def get_memory(session_id: str):
-    now = time.time()
-    # Clean up old sessions
-    expired = [sid for sid, (_, t) in session_memories.items() if now - t > MEMORY_TTL]
-    for sid in expired:
-        del session_memories[sid]
-
-    if session_id not in session_memories:
-        memory = ConversationSummaryMemory(
-            llm=llm,
-            memory_key="chat_history",
-            return_messages=True
-        )
-        session_memories[session_id] = (memory, now)
-    else:
-        session_memories[session_id] = (session_memories[session_id][0], now)
-
-    return session_memories[session_id][0]
-
-@app.get("/api/chat/stream")
-async def chat_stream(request: Request, question: str):
-    session_id = request.state.session_id
-    print(f"Using session ID: {session_id}")
-    print(f"Request cookies: {request.cookies}")
-    memory = get_memory(session_id)
-    rag_chain = get_chain(vector_index, llm, memory)
-    print(f"Current memory buffer: {getattr(memory, 'buffer', None)}")
-
+@app.post("/api/chat/stream")
+async def chat_stream(request: ChatRequest):
+    global session_memory, vector_index, llm
+    
+    # Add user message to session memory
+    session_memory[request.session_id].append({
+        "role": "user",
+        "message": request.question
+    })
+    
+    # Get the RAG chain with current conversation history
+    rag_chain = get_chain(vector_index, llm, session_memory[request.session_id])
+    
     async def event_generator():
-        # ConversationalRetrievalChain returns a dict with 'answer' key
-        async for chunk in rag_chain.astream({"question": question}):
-            if "answer" in chunk:
-                yield f"data: {chunk['answer']}\n\n"
+        full_answer = ""  # Store complete answer for memory
+        
+        try:
+            # Stream the response
+            async for chunk in rag_chain.astream(request.question):
+                # Extract text from chunk using your existing function
+                chunk_text = extract_text_from_chunk(chunk)
+                
+                if chunk_text:
+                    # Add to full answer
+                    full_answer += chunk_text
+                    
+                    # Stream the chunk to client
+                    yield f"data: {chunk_text}\n\n"
+            
+            # After streaming is complete, store bot response in memory
+            if full_answer.strip():
+                session_memory[request.session_id].append({
+                    "role": "bot",
+                    "message": full_answer.strip()
+                })
+            
+            # Send end signal
+            yield f"data: [DONE]\n\n"
+            
+        except Exception as e:
+            logger.error(f"Error in chat stream: {e}")
+            # Send error message
+            yield f"data: I apologize, but I encountered an error while processing your request.\n\n"
+            yield f"data: [DONE]\n\n"
+            
+            # Store error response in memory
+            session_memory[request.session_id].append({
+                "role": "bot",
+                "message": "I apologize, but I encountered an error while processing your request."
+            })
 
     return StreamingResponse(
         event_generator(),
@@ -112,3 +143,7 @@ async def chat_stream(request: Request, question: str):
             "X-Accel-Buffering": "no",
         }
     )
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

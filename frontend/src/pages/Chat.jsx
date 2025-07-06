@@ -9,30 +9,68 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState("");
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Initialize session on component mount
+  useEffect(() => {
+    const initializeSession = async () => {
+      try {
+        const newSessionId = Date.now().toString();
+        setSessionId(newSessionId);
+        
+        // Call ping endpoint to initialize session
+        await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/ping`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ session_id: newSessionId }),
+        });
+      } catch (error) {
+        console.error("Error initializing session:", error);
+      }
+    };
+
+    initializeSession();
+  }, []);
+
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || !sessionId) return;
     setIsLoading(true);
 
     let userMessage = { sender: "user", text: input };
     let botMessage = { sender: "bot", text: "" };
     setMessages((prev) => [...prev, userMessage, botMessage]);
+    
+    const currentInput = input;
     setInput("");
 
     try {
-      // Use fetch with credentials for SSE
+      // Use POST method as per your backend
       const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/api/chat/stream?question=${encodeURIComponent(input)}`,
+        `${process.env.REACT_APP_BACKEND_URL}/api/chat/stream`,
         {
-          method: 'GET',
-          credentials: 'include'
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            session_id: sessionId,
+            question: currentInput,
+          }),
         }
       );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       // SSE streaming for text
       const reader = response.body.getReader();
@@ -43,17 +81,30 @@ const Chat = () => {
         if (done) break;
         
         const chunk = decoder.decode(value);
-        const lines = chunk.split('\n\n');
+        const lines = chunk.split('\n');
         
         for (const line of lines) {
           if (line.startsWith('data: ')) {
-            const data = line.substring(6);
-            setMessages((prev) => {
-              const updated = [...prev];
-              const lastIndex = updated.length - 1;
-              updated[lastIndex].text += data;
-              return updated;
-            });
+            const data = line.substring(6).trim();
+            
+            // Skip [DONE] signal
+            if (data === '[DONE]') {
+              continue;
+            }
+            
+            if (data && data !== '') {
+              setMessages((prev) => {
+                const updated = [...prev];
+                const lastIndex = updated.length - 1;
+                if (updated[lastIndex] && updated[lastIndex].sender === 'bot') {
+                  updated[lastIndex] = {
+                    ...updated[lastIndex],
+                    text: updated[lastIndex].text + data
+                  };
+                }
+                return updated;
+              });
+            }
           }
         }
       }
@@ -61,10 +112,13 @@ const Chat = () => {
       console.error('Error:', error);
       setMessages((prev) => {
         const updated = [...prev];
-        updated[updated.length - 1] = { 
-          ...updated[updated.length - 1], 
-          text: "Sorry, there was an error processing your request." 
-        };
+        const lastIndex = updated.length - 1;
+        if (updated[lastIndex] && updated[lastIndex].sender === 'bot') {
+          updated[lastIndex] = { 
+            ...updated[lastIndex], 
+            text: "Sorry, there was an error processing your request." 
+          };
+        }
         return updated;
       });
     }
@@ -75,7 +129,7 @@ const Chat = () => {
   return (
     <div className="min-h-screen bg-[#151925] text-white flex flex-col items-center px-4 py-8">
       {/* Header */}
-      <div className="w-full max-w-4xl mb-6">
+      <div className="w-full max-w-4xl mb-6 py-20">
         <h1 className="text-4xl font-bold text-center text-[#1DCD9F] mb-2">
           Ask Me Anything 🤖
         </h1>
@@ -157,11 +211,11 @@ const Chat = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
-              disabled={isLoading}
+              disabled={isLoading || !sessionId}
             />
             <button
               onClick={handleSend}
-              disabled={isLoading || !input.trim()}
+              disabled={isLoading || !input.trim() || !sessionId}
               className="bg-gradient-to-r from-[#1DCD9F] to-[#16a178] text-black font-semibold px-6 py-3 rounded-xl hover:from-[#16a178] hover:to-[#138f64] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
             >
               {isLoading ? (

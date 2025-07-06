@@ -12,7 +12,7 @@ load_dotenv()
 
 def get_cassandra_session():
     scb_base64 = os.environ["ASTRA_SCB_BASE64"]
-    scb_path = "/tmp/secure-connect-dbtest.zip"
+    scb_path = "../secure-connect-dbtest.zip"
 
     with open(scb_path, "wb") as f:
         f.write(base64.b64decode(scb_base64))

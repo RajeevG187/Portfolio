@@ -9,3 +9,5 @@ langchain_google_genai
 cassandra-driver
 tiktoken
 cassio
+uvicorn
+pydantic
